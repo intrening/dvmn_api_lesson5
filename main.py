@@ -35,20 +35,27 @@ def print_ascii_table(vacancies_by_lang, title):
 
 def predict_salary(salary_from, salary_to):
     if salary_from and salary_to:
-        return (salary_to-salary_from)/2
-    return salary_from or salary_to
+        return (salary_to + salary_from) / 2
+    elif salary_from:
+        return salary_from * 1.2
+    elif salary_to:
+        return salary_to * 0.8
+    else:
+        return None
 
 
 def predict_rub_salary_hh(vacancy):
-    if vacancy['salary'] and vacancy['salary']['currency'] == 'RUR':
+    if vacancy['salary']['currency'] != 'RUR':
+        return None
+    if vacancy['salary']:
         return predict_salary(vacancy['salary']['from'], vacancy['salary']['to'])
     return None
 
 
 def predict_rub_salary_sj(vacancy):
-    if vacancy['currency'] == 'rub':
-        return predict_salary(vacancy['payment_from'], vacancy['payment_to'])
-    return None
+    if vacancy['currency'] != 'rub':
+        return None
+    return predict_salary(vacancy['payment_from'], vacancy['payment_to'])
 
 
 def fetch_hh_vacancies(text, area):
