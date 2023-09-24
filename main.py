@@ -5,10 +5,6 @@ import requests
 from dotenv import load_dotenv
 from terminaltables import AsciiTable
 
-load_dotenv()
-
-SUPERJOB_API_KEY = os.getenv('SUPERJOB_API_KEY')
-
 POPILAR_LANG = [
     'Python', 'Java', 'Javascript', 'Ruby', 'PHP', 'C++', 'C#', 'Go', 'C'
 ]
@@ -83,10 +79,10 @@ def fetch_hh_vacancies(text, area):
     return vacancies
 
 
-def fetch_sj_vacancies(text):
+def fetch_sj_vacancies(text, superjob_api_key):
     url = 'https://api.superjob.ru/2.0/vacancies/'
     headers = {
-        'X-Api-App-Id': SUPERJOB_API_KEY,
+        'X-Api-App-Id': superjob_api_key,
     }
     payload = {
         'keyword': text,
@@ -107,13 +103,14 @@ def fetch_sj_vacancies(text):
     return vacancies
 
 
-def get_superjob_vacancies_stat():
+def get_superjob_vacancies_stat(superjob_api_key):
     vacancies_by_lang = {}
     vacancies = []
     for lang in POPILAR_LANG:
         try:
             vacancies = fetch_sj_vacancies(
                 text=f'программист {lang}',
+                superjob_api_key=superjob_api_key,
             )
         except requests.exceptions.HTTPError as error:
             print(f"Ошибка:\n{error}")
@@ -167,7 +164,10 @@ def get_hh_vacancies_stat():
 
 
 def main():
-    superjobj_stat = get_superjob_vacancies_stat()
+    load_dotenv()
+    superjobj_stat = get_superjob_vacancies_stat(
+        superjob_api_key=os.getenv('SUPERJOB_API_KEY'),
+    )
     print_ascii_table(superjobj_stat, 'SuperJob Moskow')
 
     headhunter_stat = get_hh_vacancies_stat()
