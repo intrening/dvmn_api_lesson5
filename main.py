@@ -5,7 +5,7 @@ import requests
 from dotenv import load_dotenv
 from terminaltables import AsciiTable
 
-POPILAR_LANG = [
+PROGRAM_LANGUAGES = [
     'Python', 'Java', 'Javascript', 'Ruby', 'PHP', 'C++', 'C#', 'Go', 'C'
 ]
 
@@ -106,10 +106,10 @@ def fetch_sj_vacancies(text, superjob_api_key):
 def get_superjob_vacancies_stat(superjob_api_key):
     vacancies_by_lang = {}
     vacancies = []
-    for lang in POPILAR_LANG:
+    for program_language in PROGRAM_LANGUAGES:
         try:
             vacancies = fetch_sj_vacancies(
-                text=f'программист {lang}',
+                text=f'программист {program_language}',
                 superjob_api_key=superjob_api_key,
             )
         except requests.exceptions.HTTPError as error:
@@ -125,7 +125,7 @@ def get_superjob_vacancies_stat(superjob_api_key):
                 vacancies_processed += 1
         if vacancies_processed:
             average_salary = int(sum_salary/vacancies_processed)
-        vacancies_by_lang[lang] = {
+        vacancies_by_lang[program_language] = {
                 'vacancies_found': len(vacancies),
                 'vacancies_processed': vacancies_processed,
                 'average_salary': average_salary,
@@ -136,10 +136,10 @@ def get_superjob_vacancies_stat(superjob_api_key):
 def get_hh_vacancies_stat():
     vacancies_by_lang = {}
     vacancies = []
-    for lang in POPILAR_LANG:
+    for program_language in PROGRAM_LANGUAGES:
         try:
             vacancies = fetch_hh_vacancies(
-                text=f'программист {lang}',
+                text=f'программист {program_language}',
                 area=1,
             )
         except requests.exceptions.HTTPError as error:
@@ -155,7 +155,7 @@ def get_hh_vacancies_stat():
                 vacancies_processed += 1
         average_salary = int(sum_salary/vacancies_processed)
 
-        vacancies_by_lang[lang] = {
+        vacancies_by_lang[program_language] = {
             'vacancies_found': len(vacancies),
             'vacancies_processed': vacancies_processed,
             'average_salary': average_salary,
