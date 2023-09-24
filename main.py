@@ -7,7 +7,7 @@ from terminaltables import AsciiTable
 
 load_dotenv()
 
-SUPERJOB_API = os.getenv('SUPERJOB_API')
+SUPERJOB_API_KEY = os.getenv('SUPERJOB_API_KEY')
 
 POPILAR_LANG = [
     'Python', 'Java', 'Javascript', 'Ruby', 'PHP', 'C++', 'C#', 'Go', 'C'
@@ -86,7 +86,7 @@ def fetch_hh_vacancies(text, area):
 def fetch_sj_vacancies(text):
     url = 'https://api.superjob.ru/2.0/vacancies/'
     headers = {
-        'X-Api-App-Id': SUPERJOB_API
+        'X-Api-App-Id': SUPERJOB_API_KEY,
     }
     payload = {
         'keyword': text,
@@ -176,4 +176,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
