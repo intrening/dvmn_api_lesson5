@@ -17,14 +17,14 @@ def print_ascii_table(vacancies_by_lang, title):
             'Вакансий обработано', ' Средняя зарплата'
         ),
     ]
-    table_rows = []
+    table_rows = table_header
     for program_language, vacancy_stat in vacancies_by_lang.items():
         table_row = [program_language, ]
         for _, column_value in vacancy_stat.items():
             table_row.append(column_value)
         table_rows.append(table_row)
 
-    table_instance = AsciiTable(table_header.extend(table_rows), title)
+    table_instance = AsciiTable(table_rows, title)
     print(table_instance.table)
     print()
 
@@ -55,12 +55,14 @@ def predict_rub_salary_sj(vacancy):
 
 
 def fetch_hh_vacancies(text, area):
+    max_vacancies_per_page = 100
+    days_period = 30
     url = 'https://api.hh.ru/vacancies'
     payload = {
             'text': text,
             'area': area,
-            'per_page': 100,
-            'period': 30,
+            'per_page': max_vacancies_per_page,
+            'period': days_period,
         }
     vacancies = []
     total_vacancies = 0
@@ -85,14 +87,16 @@ def fetch_hh_vacancies(text, area):
 
 
 def fetch_sj_vacancies(text, superjob_api_key):
+    max_vacancies_per_page = 100
+    search_area = 'Москва'
     url = 'https://api.superjob.ru/2.0/vacancies/'
     headers = {
         'X-Api-App-Id': superjob_api_key,
     }
     payload = {
         'keyword': text,
-        'count': 100,
-        'town': 'Москва',
+        'count': max_vacancies_per_page,
+        'town': search_area,
     }
 
     vacancies = []
@@ -140,13 +144,14 @@ def get_superjob_vacancies_stat(superjob_api_key):
 
 
 def get_hh_vacancies_stat():
+    moskow_area = 1
     vacancies_by_lang = {}
     vacancies = []
     for program_language in PROGRAM_LANGUAGES:
         try:
             vacancies, total_vacancies = fetch_hh_vacancies(
                 text=f'программист {program_language}',
-                area=1,
+                area=moskow_area,
             )
         except requests.exceptions.HTTPError as error:
             print(f"Ошибка:\n{error}")
