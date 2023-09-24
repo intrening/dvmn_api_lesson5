@@ -11,24 +11,20 @@ PROGRAM_LANGUAGES = [
 
 
 def print_ascii_table(vacancies_by_lang, title):
-    table_data = [
+    table_header = [
         (
             'Язык программирования', 'Вакансий найдено',
             'Вакансий обработано', ' Средняя зарплата'
         ),
     ]
+    table_rows = []
+    for program_language, vacancy_stat in vacancies_by_lang.items():
+        table_row = [program_language, ]
+        for _, column_value in vacancy_stat.items():
+            table_row.append(column_value)
+        table_rows.append(table_row)
 
-    for lang in vacancies_by_lang:
-        data = vacancies_by_lang[lang]
-        table_data.append(
-            (
-                lang, data['vacancies_found'],
-                data['vacancies_processed'], data['average_salary']
-            )
-        )
-
-    table_instance = AsciiTable(table_data, title)
-    table_instance.justify_columns[2] = 'right'
+    table_instance = AsciiTable(table_header.extend(table_rows), title)
     print(table_instance.table)
     print()
 
@@ -45,11 +41,11 @@ def predict_salary(salary_from, salary_to):
 
 
 def predict_rub_salary_hh(vacancy):
+    if not vacancy['salary']:
+        return None
     if vacancy['salary']['currency'] != 'RUR':
         return None
-    if vacancy['salary']:
-        return predict_salary(vacancy['salary']['from'], vacancy['salary']['to'])
-    return None
+    return predict_salary(vacancy['salary']['from'], vacancy['salary']['to'])
 
 
 def predict_rub_salary_sj(vacancy):
@@ -67,6 +63,7 @@ def fetch_hh_vacancies(text, area):
             'period': 30,
         }
     vacancies = []
+    total_vacancies = 0
     for page in count():
         payload['page'] = page
         try:
@@ -75,15 +72,16 @@ def fetch_hh_vacancies(text, area):
 
             page_payload = page_response.json()
             vacancies.extend(page_payload['items'])
+            total_vacancies = page_payload['found']
             if page >= page_payload['pages']:
                 break
         except requests.exceptions.HTTPError:
             if page_response.json()['description'] == (
                 "you can't look up more than 2000 items in the list"
             ):
-                return vacancies
+                return vacancies, total_vacancies
             page_response.raise_for_status()
-    return vacancies
+    return vacancies, total_vacancies
 
 
 def fetch_sj_vacancies(text, superjob_api_key):
@@ -107,7 +105,8 @@ def fetch_sj_vacancies(text, superjob_api_key):
         vacancies.extend(page_payload['objects'])
         if not page_payload['objects']:
             break
-    return vacancies
+    total_vacancies = page_payload['total']
+    return vacancies, total_vacancies
 
 
 def get_superjob_vacancies_stat(superjob_api_key):
@@ -115,7 +114,7 @@ def get_superjob_vacancies_stat(superjob_api_key):
     vacancies = []
     for program_language in PROGRAM_LANGUAGES:
         try:
-            vacancies = fetch_sj_vacancies(
+            vacancies, total_vacancies = fetch_sj_vacancies(
                 text=f'программист {program_language}',
                 superjob_api_key=superjob_api_key,
             )
@@ -133,7 +132,7 @@ def get_superjob_vacancies_stat(superjob_api_key):
         if vacancies_processed:
             average_salary = int(sum_salary/vacancies_processed)
         vacancies_by_lang[program_language] = {
-                'vacancies_found': len(vacancies),
+                'vacancies_found': total_vacancies,
                 'vacancies_processed': vacancies_processed,
                 'average_salary': average_salary,
             }
@@ -145,7 +144,7 @@ def get_hh_vacancies_stat():
     vacancies = []
     for program_language in PROGRAM_LANGUAGES:
         try:
-            vacancies = fetch_hh_vacancies(
+            vacancies, total_vacancies = fetch_hh_vacancies(
                 text=f'программист {program_language}',
                 area=1,
             )
@@ -163,7 +162,7 @@ def get_hh_vacancies_stat():
         average_salary = int(sum_salary/vacancies_processed)
 
         vacancies_by_lang[program_language] = {
-            'vacancies_found': len(vacancies),
+            'vacancies_found': total_vacancies,
             'vacancies_processed': vacancies_processed,
             'average_salary': average_salary,
         }
